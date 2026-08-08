@@ -131,7 +131,10 @@ The project also includes a reinforcement learning module based on Deep Q-Networ
 The DQN agent interacts with a simulated charging environment and learns which charging actions provide better outcomes.
 
 
+
 Conceptually:
+
+
 Charging Environment
         │
         ▼
@@ -172,7 +175,10 @@ Version Control
 Git, GitHub
 Development
 Visual Studio Code
-📂 Project Structure
+
+
+📂 Project Structure:
+
 SmartEVChargingSystem/
 │
 ├── models/
@@ -224,7 +230,8 @@ Example:
 SECRET_KEY=your-secret-key
 Sensitive files such as .env, virtual environments, database files, and Python cache files should not be committed to the repository.
 
-📈 Future Enhancements
+📈 Future Enhancements:
+
 The project can be further extended with:
 Real-time IoT integration
 Real-time charger monitoring
@@ -236,7 +243,8 @@ Multi-station optimization
 EV charging demand prediction
 Advanced reinforcement learning algorithms
 
-💡 What This Project Demonstrates
+💡 What This Project Demonstrates:
+
 This project demonstrates practical experience in:
 Full-stack web application development
 RESTful/backend application design
