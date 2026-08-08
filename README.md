@@ -267,3 +267,18 @@ LinkedIn:https://www.linkedin.com/in/dheena-dhayal-m-41b714292?utm_source=share_
 
 📜 License
 This project was developed for academic and educational purposes.
+
+
+📸 Application Screenshots
+
+### Smart EV Charging System
+
+![Smart EV Charging System](Screenshot%202026-03-06%20192234.png)
+
+![Smart EV Charging System](Screenshot%202026-03-15%20153621.png)
+
+![Smart EV Charging System](Screenshot%202026-03-15%20161101.png)
+
+![Smart EV Charging System](Screenshot%202026-03-15%20161124.png)
+
+![Smart EV Charging System](Screenshot%202026-03-30%20114237.png)
