@@ -242,7 +242,10 @@ Software project organization
 Dheena Dhayal M
 MCA Student | PSG College of Technology
 Interested in Software Development, Artificial Intelligence, Data Structures & Algorithms, and Intelligent Systems.
-GitHub: dheena-dhayal⁠
+GitHub: dheena-dhayal
+⁠
 LinkedIn:https://www.linkedin.com/in/dheena-dhayal-m-41b714292?utm_source=share_via&utm_content=profile&utm_medium=member_android
+
+
 📜 License
 This project was developed for academic and educational purposes.
