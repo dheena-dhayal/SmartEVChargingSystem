@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Book a Charging Slot</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Available Stations</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Select Station</label>
+                        <select name="station_id" class="form-select">
+                            {% for station in stations %}
+                            <option value="{{ station.id }}">{{ station.name }} ({{ station.max_power_kw }} kW)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start Time</label>
+                        <input type="datetime-local" name="start_time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Duration (hours)</label>
+                        <input type="number" step="0.5" name="duration" class="form-control" value="1.0" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Book Slot</button>
+                    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Back</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

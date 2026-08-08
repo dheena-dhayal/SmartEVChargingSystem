@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>My Vehicles</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Add New Vehicle</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Model</label>
+                        <input type="text" name="model" class="form-control" required placeholder="e.g. Tesla Model 3">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Battery Capacity (kWh)</label>
+                        <input type="number" step="0.1" name="capacity" class="form-control" required
+                            placeholder="e.g. 75.0">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Vehicle</button>
+                    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Back</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Your EVs</div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for vehicle in current_user.vehicles %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ vehicle.model }}
+                        <span class="badge bg-primary rounded-pill">{{ vehicle.battery_capacity }} kWh</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item">No vehicles registered yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

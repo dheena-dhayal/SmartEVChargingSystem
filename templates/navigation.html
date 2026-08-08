@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<div class="row justify-content-center">
+    <div class="col-md-9"> <!-- Made slightly wider for map -->
+        <div class="glass-card">
+            <h2 class="mb-4"><i class="bi bi-map-fill text-primary"></i> Smart Route Planner</h2>
+
+            <form id="routeForm" class="mb-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Location</label>
+                        <select class="form-select" id="startLocation">
+                            <option value="0">Gandhipuram (Bus Stand)</option>
+                            <option value="1">Ukkadam (Lake)</option>
+                            <option value="2">RS Puram</option>
+                            <option value="3">Brookefields Mall</option>
+                            <option value="4">Peelamedu (Airport Rd)</option>
+                            <option value="5">Saravanampatti (Tech Hub)</option>
+                        </select>
+
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Destination</label>
+                        <select class="form-select" id="endLocation">
+                            <option value="6">Tidel Park (IT Park)</option>
+                            <option value="0">Gandhipuram (Bus Stand)</option>
+                            <option value="1">Ukkadam (Lake)</option>
+                            <option value="2">RS Puram</option>
+                            <option value="3">Brookefields Mall</option>
+                            <option value="4">Peelamedu (Airport Rd)</option>
+                            <option value="5">Saravanampatti (Tech Hub)</option>
+                        </select>
+
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Battery (%)</label>
+                    <input type="range" class="form-range" id="batteryLevel" min="0" max="100" value="50"
+                        oninput="this.nextElementSibling.value = this.value">
+                    <output>50</output>%
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" id="voiceBtn" class="btn btn-outline-primary"
+                        onclick="startVehicleVoiceControl()">
+                        <i class="bi bi-mic-fill"></i> Voice Command
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-grow-1">Find Optimal Route (AI Powered)</button>
+                </div>
+            </form>
+
+            <!-- Voice Status Indicator -->
+            <div id="voiceStatus" class="d-none text-center mb-3">
+                <div class="spinner-grow text-danger" role="status">
+                    <span class="visually-hidden">Listening...</span>
+                </div>
+                <p class="text-danger fw-bold mt-2">Listening... 🎤</p>
+                <small class="text-muted">
+                    Try:
+                    <span class="badge bg-secondary">"Navigate to Tidel Park"</span>
+                    <span class="badge bg-secondary">"Go to RS Puram"</span>
+                    <span class="badge bg-secondary">"Find Brookefields"</span>
+                    <span class="badge bg-secondary">"Start from Gandhipuram"</span>
+                </small>
+
+            </div>
+
+            <div id="routeResult" class="d-none">
+                <hr>
+                <h4 class="mb-3"><i class="bi bi-geo-alt"></i> Live Navigation Map</h4>
+
+                <!-- Leaflet Map Container -->
+                <div id="map" style="height: 400px; width: 100%; border-radius: 12px; margin-bottom: 20px; z-index: 1;">
+                </div>
+
+                <h4 class="mb-3">Recommended Itinerary</h4>
+                <div class="alert alert-success" id="resultSummary"></div>
+                <ul class="list-group" id="stepList"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    // --- Real World Map Coordinates (Coimbatore Demo) ---
+    // Mapping GraphNodeID to [Lat, Lng]
+    const nodeCoords = {
+        0: [11.0168, 76.9558], // Gandhipuram
+        1: [10.9985, 76.9616], // Ukkadam
+        2: [11.0067, 76.9515], // RS Puram
+        3: [11.0118, 76.9567], // Brookefields Mall
+        4: [11.0247, 77.0006], // Peelamedu
+        5: [11.0801, 76.9961], // Saravanampatti (Charger)
+        6: [11.0298, 77.0305]  // Tidel Park
+    };
+
+    const nodeNames = {
+        "Gandhipuram": 0,
+        "Ukkadam": 1,
+        "RS Puram": 2,
+        "Brookefields Mall": 3,
+        "Peelamedu": 4,
+        "Saravanampatti": 5, "Charging at Saravanampatti...": 5, // Handle variations
+        "Tidel Park": 6
+    };
+
+
+    let map = null;
+    let routeLayer = null;
+    let markers = [];
+
+    // --- Voice Control Logic ---
+    function startVehicleVoiceControl() {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Voice control is not supported in this browser. Please use Chrome.");
+            return;
+        }
+
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        const statusDiv = document.getElementById('voiceStatus');
+        const voiceBtn = document.getElementById('voiceBtn');
+
+        recognition.onstart = function () {
+            statusDiv.classList.remove('d-none');
+            voiceBtn.classList.add('btn-danger');
+            voiceBtn.classList.remove('btn-outline-primary');
+        };
+
+        recognition.onend = function () {
+            statusDiv.classList.add('d-none');
+            voiceBtn.classList.remove('btn-danger');
+            voiceBtn.classList.add('btn-outline-primary');
+        };
+
+        recognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            console.log("Voice Command:", transcript);
+            processCommand(transcript);
+        };
+
+        recognition.start();
+    }
+
+    function processCommand(cmd) {
+        // 0: Gandhipuram, 1: Ukkadam, 2: RS Puram, 3: Brookefields, 4: Peelamedu, 5: Saravanampatti, 6: Tidel Park
+
+        let targetId = null;
+        let targetName = "";
+
+        if (cmd.includes('gandhi') || cmd.includes('bus')) { targetId = "0"; targetName = "Gandhipuram"; }
+        else if (cmd.includes('tidel') || cmd.includes('park') || cmd.includes('office')) { targetId = "6"; targetName = "Tidel Park"; }
+        else if (cmd.includes('puram') || cmd.includes('rs')) { targetId = "2"; targetName = "RS Puram"; }
+        else if (cmd.includes('brooke') || cmd.includes('mall')) { targetId = "3"; targetName = "Brookefields"; }
+        else if (cmd.includes('ukkadam') || cmd.includes('lake')) { targetId = "1"; targetName = "Ukkadam"; }
+        else if (cmd.includes('peelamedu') || cmd.includes('airport')) { targetId = "4"; targetName = "Peelamedu"; }
+        else if (cmd.includes('saravana') || cmd.includes('charger')) { targetId = "5"; targetName = "Saravanampatti"; }
+
+
+        if (targetId !== null) {
+            // Assume commands are for DESTINATION usually, unless specified
+            // Simple logic: If command is "Start at...", set start. Else set destination.
+
+            if (cmd.includes("start at") || cmd.includes("from")) {
+                document.getElementById('startLocation').value = targetId;
+                alert(`🎤 Voice: Starting at ${targetName}`);
+            } else {
+                document.getElementById('endLocation').value = targetId;
+                // Auto-submit if it's a direct navigation command
+                if (cmd.includes("navigate") || cmd.includes("go to") || cmd.includes("route")) {
+                    document.getElementById('routeForm').dispatchEvent(new Event('submit'));
+                } else {
+                    alert(`🎤 Voice: Destination set to ${targetName}`);
+                }
+            }
+        } else {
+            alert(`🤷‍♂️ Could not understand location in: "${cmd}"`);
+        }
+    }
+
+    function initMap() {
+        // Initialize map centered on Coimbatore
+        map = L.map('map').setView([11.0168, 76.9558], 13);
+
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Add markers for all nodes
+        for (const [id, coords] of Object.entries(nodeCoords)) {
+            // Basic marker
+            const m = L.marker(coords).addTo(map);
+            // Simple tooltip
+            // Find name
+            let label = "Location";
+            for (const [name, nodeId] of Object.entries(nodeNames)) {
+                if (nodeId == id && !name.includes("Charging")) label = name;
+            }
+            m.bindPopup(`<b>${label}</b>`).openPopup();
+            markers.push(m);
+        }
+    }
+
+    function drawRouteOnMap(routeStepNames) {
+        // Clear previous route
+        if (routeLayer) {
+            map.removeLayer(routeLayer);
+        }
+
+        const latlngs = [];
+        routeStepNames.forEach(stepName => {
+            // Clean step name (remove "Charging at...", etc to find ID)
+            let lookupName = stepName;
+            if (stepName.includes("Charging")) {
+                lookupName = "Saravanampatti"; // Hardcoded alias for demo
+            }
+
+
+            // Allow exact match or partial match for mapped nodes
+            let nodeId = nodeNames[lookupName];
+
+            // Fallback for simple names
+            if (nodeId === undefined) {
+                // Try finding key that is contained in stepName
+                for (const [key, val] of Object.entries(nodeNames)) {
+                    if (stepName.includes(key)) {
+                        nodeId = val;
+                        break;
+                    }
+                }
+            }
+
+            if (nodeId !== undefined && nodeCoords[nodeId]) {
+                latlngs.push(nodeCoords[nodeId]);
+            }
+        });
+
+        if (latlngs.length > 0) {
+            // Draw Polyline
+            routeLayer = L.polyline(latlngs, {
+                color: 'blue',
+                weight: 6,
+                opacity: 0.7,
+                dashArray: '10, 10',
+                lineJoin: 'round'
+            }).addTo(map);
+
+            // Zoom flight to fit bounds
+            map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+        }
+    }
+
+    document.getElementById('routeForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Ensure map is initialized first time
+        if (!map) {
+            // Need to show the div specificially to init map correctly without sizing issues
+            document.getElementById('routeResult').classList.remove('d-none');
+            initMap();
+        }
+
+        const startId = document.getElementById('startLocation').value;
+        const endId = document.getElementById('endLocation').value;
+        const soc = document.getElementById('batteryLevel').value;
+
+        const btn = this.querySelector('button');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculating...';
+
+        try {
+            const response = await fetch('/navigation/plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start_id: startId, end_id: endId, current_soc: soc })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            const resultDiv = document.getElementById('routeResult');
+            resultDiv.classList.remove('d-none');
+            resultDiv.style.display = 'block';
+
+            // Resize map check (Leaflet needs this if container was hidden)
+            setTimeout(() => { map.invalidateSize(); }, 200);
+
+            // Draw Route
+            drawRouteOnMap(data.route);
+
+            document.getElementById('resultSummary').innerHTML = `
+            <strong>Total Time:</strong> ${data.estimated_time} mins <br>
+            <strong>Final Battery:</strong> ${data.final_soc}%
+        `;
+
+            const list = document.getElementById('stepList');
+            let timelineHtml = '<div class="timeline">';
+
+            data.route.forEach((step, index) => {
+                const isCharging = step.includes('Charging');
+                const markerClass = isCharging ? 'timeline-marker charging' : 'timeline-marker';
+                const icon = isCharging ? '<i class="bi bi-lightning-fill"></i>' : '<i class="bi bi-geo-alt-fill"></i>';
+
+                timelineHtml += `
+            <div class="timeline-item ${isCharging ? 'charging' : ''}">
+                <div class="${markerClass}"></div>
+                <div class="timeline-content">
+                    <strong>${icon} Step ${index + 1}</strong>
+                    <p class="mb-0">${step}</p>
+                </div>
+            </div>`;
+            });
+            timelineHtml += '</div>';
+            list.innerHTML = timelineHtml;
+
+        } catch (error) {
+            alert('Error calculating route: ' + error.message);
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Find Optimal Route (AI Powered)';
+        }
+    });
+</script>
+{% endblock %}

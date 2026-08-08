@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4 fw-bold">Admin Analytics Dashboard</h2>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+            <h5 class="text-secondary text-uppercase fs-6 mb-2">Total Energy Dispensed</h5>
+            <div class="stat-value text-success mb-1" id="total-energy">--</div>
+            <small class="text-muted">Last 7 Days</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+            <h5 class="text-secondary text-uppercase fs-6 mb-2">Active Users</h5>
+            <div class="stat-value text-primary mb-1" id="active-users">--</div>
+            <small class="text-muted">Currently Connected</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+            <h5 class="text-secondary text-uppercase fs-6 mb-2">Total Sessions</h5>
+            <div class="stat-value text-warning mb-1" id="total-sessions">--</div>
+            <small class="text-muted">Lifetime</small>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="glass-card p-4">
+            <h5 class="mb-3">Energy Consumption Trend</h5>
+            <canvas id="energyChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-4">
+            <h5 class="mb-3">Peak Usage Hours</h5>
+            <canvas id="peakChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
+{% endblock %}
