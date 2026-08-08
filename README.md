@@ -79,6 +79,10 @@ Administrators can:
  🏗️ System Architecture
 
  Architecture:
+
+
+
+ 
                          ┌─────────────────┐
                          │      Users      │
                          └────────┬────────┘
@@ -109,7 +113,11 @@ Administrators can:
                        ┌──────────────────┐
                        │    SQLite DB     │
                        └──────────────────┘
-🧠 Optimization Methodology
+
+
+                       
+🧠 Optimization Methodology:
+
 Priority-Based Scheduling
 The initial scheduling mechanism uses a priority-based greedy strategy.
 Charging requests are evaluated using parameters such as:
@@ -121,6 +129,8 @@ This provides an efficient baseline scheduling solution.
 Deep Q-Network (DQN)
 The project also includes a reinforcement learning module based on Deep Q-Networks.
 The DQN agent interacts with a simulated charging environment and learns which charging actions provide better outcomes.
+
+
 Conceptually:
 Charging Environment
         │
